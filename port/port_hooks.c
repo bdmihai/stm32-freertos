@@ -21,33 +21,33 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 02.Jan.2021  |
- |                                                                            |
+ |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
+ |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
+ 
+#include "stm32rtos.h"
+#include "portmacro.h"
+#include "port.h"
 
-import qbs.FileInfo
+/**
+ * This function will be called by each tick interrupt if configUSE_TICK_HOOK 
+ * is set to 1 in FreeRTOSConfig.h.  User code can be added here, but the tick 
+ * hook is called from an interrupt context, so code must not attempt to block, 
+ * and only the interrupt safe FreeRTOS API functions can be used (those that 
+ * end in FromISR()).
+ */
+__attribute__((weak)) void vApplicationTickHook() { }
 
-Product {
-    name: "freertos"
-    type: "lib"
-
-    Depends { name: "stm32" }
-    Depends { name: "cmsis" }
-    Depends { name: "hal" }
-    stm32.includePaths: [ "inc", "port" ]
-
-    files: [
-        "inc/*.h",
-        "src/*.c",
-        "port/*.c",
-        "port/*.h",
-        "port/*.s",
-    ]
-
-    Export {
-        Depends { name: "stm32" }
-        stm32.includePaths: product.stm32.includePaths
-        stm32.libraryPaths: [ product.destinationDirectory ]
-        stm32.linkerFlags: ["-Wl,--undefined=uxTopUsedPriority"]
-    }
-}
+/**
+ *  vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
+ *  to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle 
+ * task.  It is essential that code added to this hook function never attempts
+ * to block in any way (for example, call xQueueReceive() with a block time 
+ * specified, or call vTaskDelay()).  If the application makes use of the 
+ * vTaskDelete() API function (as this demo application does) then it is also 
+ * important that vApplicationIdleHook() is permitted to return to its calling 
+ * function, because it is the responsibility of the idle task to clean up 
+ * memory allocated by the kernel to any task that has since been deleted.
+ * 
+ */
+__attribute__((weak)) void vApplicationIdleHook(void) { }

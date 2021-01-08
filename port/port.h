@@ -21,33 +21,39 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 02.Jan.2021  |
- |                                                                            |
+ |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
+ |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
+ 
+#pragma once
 
-import qbs.FileInfo
+/* critical nesting counter maintained by port */
+extern uint32_t uxCriticalNesting;
 
-Product {
-    name: "freertos"
-    type: "lib"
+/* maximum syscall priority */
+extern const uint32_t uxMaxSyscallPriority;
 
-    Depends { name: "stm32" }
-    Depends { name: "cmsis" }
-    Depends { name: "hal" }
-    stm32.includePaths: [ "inc", "port" ]
+/* used to catch tasks that attempt to return from their implementing function. */
+extern void vTaskExitError(void);
 
-    files: [
-        "inc/*.h",
-        "src/*.c",
-        "port/*.c",
-        "port/*.h",
-        "port/*.s",
-    ]
+/* validation of the Interupt priority. */
+extern void vPortValidateInterruptPriority(void);
 
-    Export {
-        Depends { name: "stm32" }
-        stm32.includePaths: product.stm32.includePaths
-        stm32.libraryPaths: [ product.destinationDirectory ]
-        stm32.linkerFlags: ["-Wl,--undefined=uxTopUsedPriority"]
-    }
-}
+/* setup the systick timer */
+extern void vConfigurePortSysTick(void);
+
+/* yield the next highest prio task */
+extern void vPortYield(void);
+
+/* start the first task */
+extern void vStartFirstTask(void);
+
+/* critical section handling */
+extern void vPortEnterCritical(void);
+extern void vPortExitCritical(void);
+
+/* assertion */
+extern void vAssertBlink(const int);
+
+/* validate the priotity of interupts calling FromISR functions */
+extern void vPortValidateInterruptPriority(void);
