@@ -24,7 +24,7 @@
  |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
- 
+
 #include "stm32rtos.h"
 #include "stm32f4xx.h"
 #include "task.h"
@@ -33,25 +33,25 @@
 
 /**
  * @brief Setup the systick timer to generate the tick interrupts at the required frequency.
- * 
+ *
  */
 void vConfigurePortSysTick(void)
 {
-	/* stop and clear the SysTick. */
-	SysTick->CTRL = 0UL;
-	SysTick->VAL  = 0UL;
+    /* stop and clear the SysTick. */
+    SysTick->CTRL = 0UL;
+    SysTick->VAL  = 0UL;
 
-	/* set the SysTick interrupt to the lowest priority in the kernel */
-	NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), configKERNEL_INTERRUPT_PRIORITY >> (8U - __NVIC_PRIO_BITS), 0U));
+    /* set the SysTick interrupt to the lowest priority in the kernel */
+    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), configKERNEL_INTERRUPT_PRIORITY >> (8U - __NVIC_PRIO_BITS), 0U));
 
-	/* configure SysTick to interrupt at the requested rate. */
-	SysTick->LOAD = ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
-	SysTick->CTRL = ( SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk );
+    /* configure SysTick to interrupt at the requested rate. */
+    SysTick->LOAD = ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
+    SysTick->CTRL = ( SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk );
 }
 
 /**
  * @brief Handler for the SysTick interupt.
- * 
+ *
  * The SysTick runs at the lowest interrupt priority, so when this interrupt
  * executes all interrupts must be unmasked.  There is therefore no need to
  * save and then restore the interrupt mask value as its value is already
@@ -59,15 +59,14 @@ void vConfigurePortSysTick(void)
  */
 void SysTick_Handler(void)
 {
-	portDISABLE_INTERRUPTS();
-	{
-		/* increment the RTOS tick. If necessary trigger a context switch using 
+    portDISABLE_INTERRUPTS();
+    {
+        /* increment the RTOS tick. If necessary trigger a context switch using
         the PendSV interrupt */
-		if( xTaskIncrementTick() != pdFALSE )
-		{
-			/* a context switch is required to allow the next task to run */
-			vPortYield();
-		}
-	}
-	portENABLE_INTERRUPTS();
+        if( xTaskIncrementTick() != pdFALSE ) {
+            /* a context switch is required to allow the next task to run */
+            vPortYield();
+        }
+    }
+    portENABLE_INTERRUPTS();
 }

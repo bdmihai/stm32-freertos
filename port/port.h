@@ -24,7 +24,7 @@
  |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
- 
+
 #pragma once
 
 /* critical nesting counter maintained by port */

@@ -32,10 +32,10 @@
 #include "port.h"
 
 /**
- * @brief Blink n times. 
- * 
+ * @brief Blink n times.
+ *
  * This is a dummy function as the real blink should be implemented by application.
- * 
+ *
  */
 __attribute__((weak)) void blink(const int n)
 {
@@ -47,9 +47,9 @@ __attribute__((weak)) void blink(const int n)
 }
 
 /**
- * @brief Blink n times. 
- * 
- * @param n how many times to blink. 
+ * @brief Blink n times.
+ *
+ * @param n how many times to blink.
  */
 void vAssertBlink(const int n)
 {
@@ -58,21 +58,20 @@ void vAssertBlink(const int n)
 
 /**
  * @brief Used to catch tasks that attempt to return from their implementing function.
- * 
- * A function that implements a task must not exit or attempt to return to its caller 
- * as there is nothing to return to. If a task wants to exit it should instead call 
+ *
+ * A function that implements a task must not exit or attempt to return to its caller
+ * as there is nothing to return to. If a task wants to exit it should instead call
  * vTaskDelete.
  */
 void vTaskExitError( void )
 {
     volatile uint32_t ulDummy = 0UL;
 
-    /* Artificially force an assert() to be triggered if configASSERT() is defined, 
+    /* Artificially force an assert() to be triggered if configASSERT() is defined,
     then stop here so application writers can catch the error. */
     configASSERT( uxCriticalNesting == ~0UL );
     portDISABLE_INTERRUPTS();
-    while( ulDummy == 0 )
-    {
+    while( ulDummy == 0 ) {
         /* ulDummy is used purely to quieten other warnings
         about code appearing after this function is called - making ulDummy
         volatile makes the compiler think the function could return and
@@ -83,17 +82,17 @@ void vTaskExitError( void )
 
 /**
  * @brief Blink two short pulses if malloc fails.
- * 
- * This function will only be called if configUSE_MALLOC_FAILED_HOOK is set to 
- * 1 in FreeRTOSConfig.h.  It is a hook function that will get called if a call 
- * to pvPortMalloc() fails. pvPortMalloc() is called internally by the kernel 
- * whenever a task, queue, timer or semaphore is created.  It is also called by 
- * various parts of the demo application.  If heap_1.c or heap_2.c are used, 
- * then the size of the heap available to pvPortMalloc() is defined by 
- * configTOTAL_HEAP_SIZE in FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API 
- * function can be used to query the size of free heap space that remains 
- * (although it does not provide information on how the remaining heap might be 
- * fragmented). 
+ *
+ * This function will only be called if configUSE_MALLOC_FAILED_HOOK is set to
+ * 1 in FreeRTOSConfig.h.  It is a hook function that will get called if a call
+ * to pvPortMalloc() fails. pvPortMalloc() is called internally by the kernel
+ * whenever a task, queue, timer or semaphore is created.  It is also called by
+ * various parts of the demo application.  If heap_1.c or heap_2.c are used,
+ * then the size of the heap available to pvPortMalloc() is defined by
+ * configTOTAL_HEAP_SIZE in FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API
+ * function can be used to query the size of free heap space that remains
+ * (although it does not provide information on how the remaining heap might be
+ * fragmented).
  */
 void vApplicationMallocFailedHook()
 {
@@ -102,8 +101,8 @@ void vApplicationMallocFailedHook()
 
 /**
  * @brief Run time stack overflow checking hook function.
- * 
- * Run time stack overflow checking is performed if configCHECK_FOR_STACK_OVERFLOW 
+ *
+ * Run time stack overflow checking is performed if configCHECK_FOR_STACK_OVERFLOW
  * is defined to 1 or 2.  This hook function is called if a stack overflow is detected.
  * \param[in] pxTask Task handle
  * \param[in] pcTaskName Task name
@@ -117,10 +116,10 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
 
 /**
  * @brief Validation of the Interupt priority.
- * 
+ *
  * This function checks that the interupts that call ...FromISR rtos functions have
- * the correct prio set: smaller or eq to 
- * 
+ * the correct prio set: smaller or eq to
+ *
  */
 void vPortValidateInterruptPriority( void )
 {
@@ -131,35 +130,34 @@ void vPortValidateInterruptPriority( void )
     ulCurrentInterrupt = __get_IPSR();
 
     /* exceptions 1-15 are reserved for cortex M - only external interupts are considered */
-    if( ulCurrentInterrupt >= 16 )
-    {
-    	/* get the interrupt's priority. */
-    	ucCurrentPriority = NVIC_GetPriority(ulCurrentInterrupt-16);
-        
-    	/* The following assertion will fail if a service routine (ISR) for
-    	an interrupt that has been assigned a priority above
-    	configMAX_SYSCALL_INTERRUPT_PRIORITY calls an ISR safe FreeRTOS API
-    	function.  ISR safe FreeRTOS API functions must *only* be called
-    	from interrupts that have been assigned a priority at or below
-    	configMAX_SYSCALL_INTERRUPT_PRIORITY.
+    if( ulCurrentInterrupt >= 16 ) {
+        /* get the interrupt's priority. */
+        ucCurrentPriority = NVIC_GetPriority(ulCurrentInterrupt-16);
 
-    	Numerically low interrupt priority numbers represent logically high
-    	interrupt priorities, therefore the priority of the interrupt must
-    	be set to a value equal to or numerically *higher* than
-    	configMAX_SYSCALL_INTERRUPT_PRIORITY.
+        /* The following assertion will fail if a service routine (ISR) for
+        an interrupt that has been assigned a priority above
+        configMAX_SYSCALL_INTERRUPT_PRIORITY calls an ISR safe FreeRTOS API
+        function.  ISR safe FreeRTOS API functions must *only* be called
+        from interrupts that have been assigned a priority at or below
+        configMAX_SYSCALL_INTERRUPT_PRIORITY.
 
-    	Interrupts that	use the FreeRTOS API must not be left at their
-    	default priority of	zero as that is the highest possible prioritipsry,
-    	which is guaranteed to be above configMAX_SYSCALL_INTERRUPT_PRIORITY,
-    	and	therefore also guaranteed to be invalid.
+        Numerically low interrupt priority numbers represent logically high
+        interrupt priorities, therefore the priority of the interrupt must
+        be set to a value equal to or numerically *higher* than
+        configMAX_SYSCALL_INTERRUPT_PRIORITY.
 
-    	FreeRTOS maintains separate thread and ISR API functions to ensure
-    	interrupt entry is as fast and simple as possible.
+        Interrupts that use the FreeRTOS API must not be left at their
+        default priority of zero as that is the highest possible prioritipsry,
+        which is guaranteed to be above configMAX_SYSCALL_INTERRUPT_PRIORITY,
+        and therefore also guaranteed to be invalid.
 
-    	The following links provide detailed information:
-    	http://www.freertos.org/RTOS-Cortex-M3-M4.html
-    	http://www.freertos.org/FAQHelp.html */
-    	configASSERT(ucCurrentPriority >= configMAX_SYSCALL_INTERRUPT_PRIORITY);
+        FreeRTOS maintains separate thread and ISR API functions to ensure
+        interrupt entry is as fast and simple as possible.
+
+        The following links provide detailed information:
+        http://www.freertos.org/RTOS-Cortex-M3-M4.html
+        http://www.freertos.org/FAQHelp.html */
+        configASSERT(ucCurrentPriority >= configMAX_SYSCALL_INTERRUPT_PRIORITY);
     }
 
     /* Priority grouping:  The interrupt controller (NVIC) allows the bits

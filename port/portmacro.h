@@ -67,7 +67,7 @@ typedef unsigned long UBaseType_t;
 #define portTICK_PERIOD_MS						( ( TickType_t ) 1000 / configTICK_RATE_HZ )
 #define portBYTE_ALIGNMENT						8
 #define portFORCE_INLINE 						inline __attribute__(( always_inline))
-#define portMEMORY_BARRIER()					__asm volatile( "" ::: "memory" )
+#define portMEMORY_BARRIER()					__DMB()
 /*-----------------------------------------------------------*/
 
 /* Scheduler utilities. */
@@ -76,9 +76,9 @@ typedef unsigned long UBaseType_t;
 /*-----------------------------------------------------------*/
 
 /* Critical section management. */
-#define portSET_INTERRUPT_MASK_FROM_ISR()		__get_BASEPRI();__set_BASEPRI(configMAX_SYSCALL_INTERRUPT_PRIORITY)
+#define portSET_INTERRUPT_MASK_FROM_ISR()		__get_BASEPRI();__set_BASEPRI(configMAX_SYSCALL_INTERRUPT_PRIORITY);__DSB();__ISB()
 #define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	__set_BASEPRI(x)
-#define portDISABLE_INTERRUPTS()				__set_BASEPRI(configMAX_SYSCALL_INTERRUPT_PRIORITY)
+#define portDISABLE_INTERRUPTS()				__set_BASEPRI(configMAX_SYSCALL_INTERRUPT_PRIORITY);__DSB();__ISB()
 #define portENABLE_INTERRUPTS()					__set_BASEPRI(0)
 #define portENTER_CRITICAL()					vPortEnterCritical()
 #define portEXIT_CRITICAL()						vPortExitCritical()
