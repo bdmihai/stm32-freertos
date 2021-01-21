@@ -132,7 +132,7 @@ void vPortValidateInterruptPriority( void )
     /* exceptions 1-15 are reserved for cortex M - only external interupts are considered */
     if( ulCurrentInterrupt >= 16 ) {
         /* get the interrupt's priority. */
-        ucCurrentPriority = NVIC_GetPriority(ulCurrentInterrupt-16);
+        ucCurrentPriority = NVIC_GetPriority(ulCurrentInterrupt - 16);
 
         /* The following assertion will fail if a service routine (ISR) for
         an interrupt that has been assigned a priority above
@@ -157,7 +157,7 @@ void vPortValidateInterruptPriority( void )
         The following links provide detailed information:
         http://www.freertos.org/RTOS-Cortex-M3-M4.html
         http://www.freertos.org/FAQHelp.html */
-        configASSERT(ucCurrentPriority >= configMAX_SYSCALL_INTERRUPT_PRIORITY);
+        configASSERT(ucCurrentPriority >= (configMAX_SYSCALL_INTERRUPT_PRIORITY >> (8U - __NVIC_PRIO_BITS)));
     }
 
     /* Priority grouping:  The interrupt controller (NVIC) allows the bits
