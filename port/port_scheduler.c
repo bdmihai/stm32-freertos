@@ -21,7 +21,7 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
+ |  Author: Mihai Baneu                           Last modified: 24.Jan.2021  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
@@ -47,7 +47,7 @@ const uint32_t uxMaxSyscallPriority = configMAX_SYSCALL_INTERRUPT_PRIORITY;
  * prepared and configured.
  *
  */
-BaseType_t xPortStartScheduler( void )
+BaseType_t xPortStartScheduler(void)
 {
     /* configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to 0.
     See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html */
@@ -57,8 +57,11 @@ BaseType_t xPortStartScheduler( void )
     /* 4 bits for pre-emption priority, 0 bits for subpriority */
     NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
-    /* make PendSV the lowest priority interrupts. */
+    /* make PendSV the lowest priority interrupts */
     NVIC_SetPriority(PendSV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), (configKERNEL_INTERRUPT_PRIORITY >> (8U - __NVIC_PRIO_BITS)), 0U));
+
+    /* make SVC higher in priority than the syscall */
+    NVIC_SetPriority(SVCall_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), ((configMAX_SYSCALL_INTERRUPT_PRIORITY - 1) >> (8U - __NVIC_PRIO_BITS)), 0U));
 
     /* enable the FPU and configure automatic hardware state preservation and restoration
     for floating-point context */
@@ -97,7 +100,7 @@ BaseType_t xPortStartScheduler( void )
  * @brief End scheduler.
  *
  */
-void vPortEndScheduler( void )
+void vPortEndScheduler(void)
 {
     /* Not implemented in ports where there is nothing to return to.
     Artificially force an assert. */
@@ -110,19 +113,10 @@ void vPortEndScheduler( void )
  * Interupts are disabled.
  *
  */
-void vPortEnterCritical( void )
+void vPortEnterCritical(void)
 {
     portDISABLE_INTERRUPTS();
     uxCriticalNesting++;
-
-    /* This is not the interrupt safe version of the enter critical function so
-    assert() if it is being called from an interrupt context.  Only API
-    functions that end in "FromISR" can be used in an interrupt.  Only assert if
-    the critical nesting count is 1 to protect against recursive calls if the
-    assert function also uses a critical section. */
-    if( uxCriticalNesting == 1 ) {
-        configASSERT( ( SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk ) == 0 );
-    }
 }
 
 /**
@@ -131,12 +125,38 @@ void vPortEnterCritical( void )
  * If the nexting is 0 then the interupts get enabled.
  *
  */
-void vPortExitCritical( void )
+void vPortExitCritical(void)
 {
     configASSERT(uxCriticalNesting);
     uxCriticalNesting--;
     if( uxCriticalNesting == 0 ) {
         portENABLE_INTERRUPTS();
+    }
+}
+
+/**
+ * @brief Handler for the Supervisor Call.
+ * 
+ * @param svc_args 
+ */
+void vServiceHandler(uint32_t *svc_args)
+{
+    uint8_t svc_number = ((char *) svc_args[6])[-2]; //Memory[(Stacked PC)-2]
+    // r0 = svc_args[0];
+    // r1 = svc_args[1];
+    // r2 = svc_args[2];
+    // r3 = svc_args[3];
+
+    switch (svc_number)
+    {
+        case 0:
+            vSetFirstTaskContext();
+            break;
+        case 1:
+            vRaisePrivilege();
+            vPortYield();
+            vResetPrivilege();
+            break;
     }
 }
 

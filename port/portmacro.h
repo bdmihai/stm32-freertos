@@ -71,8 +71,8 @@ typedef unsigned long UBaseType_t;
 /*-----------------------------------------------------------*/
 
 /* Scheduler utilities. */
-#define portYIELD() 							vPortYield()
-#define portYIELD_FROM_ISR() 					vPortYield()
+#define portYIELD() 							__asm volatile ( "svc 1 \n" ::: "memory" );
+#define portYIELD_FROM_ISR() 					__asm volatile ( "svc 1 \n" ::: "memory" );
 /*-----------------------------------------------------------*/
 
 /* Critical section management. */

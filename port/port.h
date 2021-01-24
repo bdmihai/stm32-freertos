@@ -21,7 +21,7 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
+ |  Author: Mihai Baneu                           Last modified: 24.Jan.2021  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
@@ -47,6 +47,16 @@ extern void vPortYield(void);
 
 /* start the first task */
 extern void vStartFirstTask(void);
+
+/* start first task context */
+extern void vSetFirstTaskContext(void);
+
+/* port svc C handler */
+extern void vServiceHandler(uint32_t *svc_args);
+
+/* privilege control */
+extern void vRaisePrivilege(void);
+extern void vResetPrivilege(void);
 
 /* critical section handling */
 extern void vPortEnterCritical(void);

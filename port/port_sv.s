@@ -21,15 +21,48 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
+ |  Author: Mihai Baneu                           Last modified: 24.Jan.2021  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
  
 .syntax unified
 
+.global vRaisePrivilege
+.global vResetPrivilege
 .global vStartFirstTask
+.global vSetFirstTaskContext
 .global SVC_Handler
 .global PendSV_Handler
+
+/*-----------------------------------------------------------*/
+/*                       vRaisePrivilege                     */
+/*-----------------------------------------------------------*/
+.section .text.vRaisePrivilege, "ax", %progbits
+.type vRaisePrivilege, %function
+
+/* This function sets the elevated privileges */
+vRaisePrivilege:
+    mrs r1, control
+    bic r1, #1
+    msr control, r1
+    bx lr
+
+.size vRaisePrivilege, .-vRaisePrivilege
+
+/*-----------------------------------------------------------*/
+/*                       vResetPrivilege                     */
+/*-----------------------------------------------------------*/
+.section .text.vResetPrivilege, "ax", %progbits
+.type vResetPrivilege, %function
+
+/* This function resets the elevated privileges */
+vResetPrivilege:
+    mrs r0, control
+    orr r0, #1
+    msr control, r0	
+    bx lr
+
+.size vResetPrivilege, .-vResetPrivilege
 
 /*-----------------------------------------------------------*/
 /*                       vStartFirstTask                     */
@@ -40,22 +73,61 @@
 /* This function starts the first task by executing the Supervisor Call command. In 
 this way the context of the first task is executed. */
 vStartFirstTask:
-	/* set the msp back to the start of the stack. */
-	ldr r0, =__stack_end
-	msr msp, r0
-	
-	/* globally enable interrupts. */
-	cpsie i
-	cpsie f
-	dsb
-	isb
+    /* set the msp back to the start of the stack. */
+    ldr r0, =__stack_end
+    msr msp, r0
+    
+    /* globally enable interrupts. */
+    cpsie i
+    cpsie f
+    dsb
+    isb
 
-	/* system call to start first task. */
-	svc 0
-	nop
+    /* system call to start first task. */
+    svc 0
+    nop
 
 .word __stack_end
 .size vStartFirstTask, .-vStartFirstTask
+
+/*-----------------------------------------------------------*/
+/*                    vSetFirstTaskContext                   */
+/*-----------------------------------------------------------*/
+.section .text.vSetFirstTaskContext, "ax", %progbits
+.type vSetFirstTaskContext, %function
+
+/* This function sets the context of the first task and returns into this task. */
+vSetFirstTaskContext:
+    /* get the location of the pxCurrentTCB */
+    ldr	r3, pxCurrentTCBConst2
+    ldr r1, [r3]
+
+    /* first item in pxCurrentTCB is the task top of stack */
+    ldr r0, [r1]
+
+    /* pop the registers that are not automatically saved on exception entry and the critical nesting count */
+    ldmia r0!, {r4-r11, r14}
+
+    /* set the new process stack pointer */
+    msr psp, r0
+    isb
+
+    /* enable the interrupts */
+    mov r0, #0
+    msr	basepri, r0
+
+    /* reset privileges */
+    mrs r0, control
+    orr r0, #1
+    msr control, r0
+
+    /* return from handler mode */
+    bx r14
+
+    .align 4
+pxCurrentTCBConst2: .word pxCurrentTCB
+
+.size vSetFirstTaskContext, .-vSetFirstTaskContext
 
 /*-----------------------------------------------------------*/
 /*                         SVC_Handler                       */
@@ -63,31 +135,16 @@ vStartFirstTask:
 .section .text.SVC_Handler, "ax", %progbits
 .type SVC_Handler, %function
 
-/* This is the SuperVisor Call Handler and it executes in case svc instuction is called (e.g. from first task) */
+/* This is the SuperVisor Call Handler -> forward to C for sevice*/
 SVC_Handler:
-	/* get the location of the pxCurrentTCB */
-	ldr	r3, pxCurrentTCBConst2
-	ldr r1, [r3]
-
-	/* first item in pxCurrentTCB is the task top of stack */
-	ldr r0, [r1]
-
-	/* pop the registers that are not automatically saved on exception entry and the critical nesting count */
-	ldmia r0!, {r4-r11, r14}
-
-	/* set the new process stack pointer */
-	msr psp, r0
-	isb
-
-	/* enable the interrupts */
-	mov r0, #0
-	msr	basepri, r0
-
-	/* return from handler mode */
-	bx r14
-
-	.align 4
-pxCurrentTCBConst2: .word pxCurrentTCB
+    mrs r0, control
+    bic r0, #1
+    msr control, r0
+    tst lr, #4
+    ite eq
+    mrseq r0, msp
+    mrsne r0, psp
+    b vServiceHandler
 
 .size SVC_Handler, .-SVC_Handler
 
@@ -98,68 +155,68 @@ pxCurrentTCBConst2: .word pxCurrentTCB
 .type PendSV_Handler, %function
 
 PendSV_Handler:
-	/* get the process stack pointer */
-	mrs r0, psp
-	isb
+    /* get the process stack pointer */
+    mrs r0, psp
+    isb
 
-	/* get the location of the pxCurrentTCB */
-	ldr	r3, pxCurrentTCBConst
-	ldr	r2, [r3]
+    /* get the location of the pxCurrentTCB */
+    ldr	r3, pxCurrentTCBConst
+    ldr	r2, [r3]
 
-	/* backup the fpu registers to the task stack */
-	tst r14, #0x10
-	it eq
-	vstmdbeq r0!, {s16-s31}
+    /* backup the fpu registers to the task stack */
+    tst r14, #0x10
+    it eq
+    vstmdbeq r0!, {s16-s31}
 
-	/* backup the core registers to the task stack */
-	stmdb r0!, {r4-r11, r14}
+    /* backup the core registers to the task stack */
+    stmdb r0!, {r4-r11, r14}
 
-	/* first item in pxCurrentTCB is the task top of stack - update with the new value */
-	str r0, [r2]
-	
-	/* backup necessary scratch registers to stack - keep stack 8 bytes aligned */
-	stmdb sp!, {r0, r3}
+    /* first item in pxCurrentTCB is the task top of stack - update with the new value */
+    str r0, [r2]
+    
+    /* backup necessary scratch registers to stack - keep stack 8 bytes aligned */
+    stmdb sp!, {r0, r3}
 
-	/* disable interupts with lower priority as the max syscall to avoid inconsistent 
-	data changes from interupts where FromISR functions get called */
-	ldr r0, uxMaxSyscallPriorityConst
-	ldr r0, [r0]
-	msr basepri, r0
-	dsb
-	isb
+    /* disable interupts with lower priority as the max syscall to avoid inconsistent 
+    data changes from interupts where FromISR functions get called */
+    ldr r0, uxMaxSyscallPriorityConst
+    ldr r0, [r0]
+    msr basepri, r0
+    dsb
+    isb
 
-	/* change the current context (address pointed by pxCurrentTCB) */
-	bl vTaskSwitchContext  
+    /* change the current context (address pointed by pxCurrentTCB) */
+    bl vTaskSwitchContext
 
-	/* reenable the interrupts */
-	mov r0, #0
-	msr basepri, r0	
+    /* reenable the interrupts */
+    mov r0, #0
+    msr basepri, r0	
 
-	/* restore necessary scratch registers from stack */
-	ldmia sp!, {r0, r3}
+    /* restore necessary scratch registers from stack */
+    ldmia sp!, {r0, r3}
 
-	/* first item in pxCurrentTCB is the task top of stack */
-	ldr r1, [r3]                  
-	ldr r0, [r1]
+    /* first item in pxCurrentTCB is the task top of stack */
+    ldr r1, [r3]                  
+    ldr r0, [r1]
 
-	/* restore the core registers from the task stack */
-	ldmia r0!, {r4-r11, r14}
+    /* restore the core registers from the task stack */
+    ldmia r0!, {r4-r11, r14}
 
-	/* restore the fpu registers from the task stack */
-	tst r14, #0x10
-	it eq
-	vldmiaeq r0!, {s16-s31}
+    /* restore the fpu registers from the task stack */
+    tst r14, #0x10
+    it eq
+    vldmiaeq r0!, {s16-s31}
 
-	/* set the new process stack pointer */
-	msr psp, r0
-	isb
+    /* set the new process stack pointer */
+    msr psp, r0
+    isb
 
-	/* return from handler mode */
-	bx r14
+    /* return from handler mode */
+    bx r14
 
-	.align 4
+    .align 4
 pxCurrentTCBConst: .word pxCurrentTCB
-	.align 4
+    .align 4
 uxMaxSyscallPriorityConst: .word uxMaxSyscallPriority
 
 .size PendSV_Handler, .-PendSV_Handler
