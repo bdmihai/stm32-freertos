@@ -79,10 +79,10 @@ BaseType_t xPortStartScheduler(void)
 
     /* Start the timer that generates the tick ISR.  Interrupts are disabled
     here already. */
-    vConfigurePortSysTick();
+    vPortConfigureSysTick();
 
     /* start the first task */
-    vStartFirstTask();
+    vPortStartFirstTask();
 
     /* Should never get here as the tasks will now be executing!  Call the task
     exit error function to prevent compiler warnings about a static function
@@ -90,7 +90,7 @@ BaseType_t xPortStartScheduler(void)
     functionality. Call vTaskSwitchContext() so link time optimisation does not
     remove the symbol. */
     vTaskSwitchContext();
-    vTaskExitError();
+    vPortTaskExitError();
 
     /* Should not get here! */
     return 0;
@@ -139,7 +139,7 @@ void vPortExitCritical(void)
  * 
  * @param svc_args 
  */
-void vServiceHandler(uint32_t *svc_args)
+void vPortServiceHandler(uint32_t *svc_args)
 {
     uint8_t svc_number = ((char *) svc_args[6])[-2]; //Memory[(Stacked PC)-2]
     // r0 = svc_args[0];
@@ -150,12 +150,12 @@ void vServiceHandler(uint32_t *svc_args)
     switch (svc_number)
     {
         case 0:
-            vSetFirstTaskContext();
+            vPortSetFirstTaskContext();
             break;
         case 1:
-            vRaisePrivilege();
+            vPortRaisePrivilege();
             vPortYield();
-            vResetPrivilege();
+            vPortResetPrivilege();
             break;
     }
 }

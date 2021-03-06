@@ -35,7 +35,7 @@
  * @brief Setup the systick timer to generate the tick interrupts at the required frequency.
  *
  */
-void vConfigurePortSysTick(void)
+void vPortConfigureSysTick(void)
 {
     /* stop and clear the SysTick. */
     SysTick->CTRL = 0UL;

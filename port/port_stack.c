@@ -42,7 +42,7 @@ have bit-0 clear, as it is loaded into the PC on exit from an ISR. */
 /* address where a task should return. used to trap tasks that attempt to
 return from their implementing functions (tasks should call vTaskDelete if
 they want to exit */
-#define portTASK_RETURN_ADDRESS             vTaskExitError
+#define portTASK_RETURN_ADDRESS             vPortTaskExitError
 
 /**
  * @brief Simulate the stack frame as it would be created by a context switch interrupt.

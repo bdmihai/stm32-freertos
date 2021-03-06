@@ -21,50 +21,45 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 24.Jan.2021  |
+ |  Author: Mihai Baneu                           Last modified: 26.Jan.2021  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
-#pragma once
+#include "stm32rtos.h"
+#include "stm32f4xx.h"
+#include "portmacro.h"
+#include "port.h"
+#include "task.h"
 
-/* critical nesting counter maintained by port */
-extern uint32_t uxCriticalNesting;
 
-/* maximum syscall priority */
-extern const uint32_t uxMaxSyscallPriority;
+void vPortConfigureStatsTimer(void)
+{
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    DWT->CYCCNT = 0;
+}
 
-/* used to catch tasks that attempt to return from their implementing function. */
-extern void vPortTaskExitError(void);
+uint32_t vPortGetStatsTimerValue(void)
+{
+    return DWT->CYCCNT;
+}
 
-/* setup the systick timer */
-extern void vPortConfigureSysTick(void);
+uint32_t vPortGetRunTimeStats(TaskStatus_t *pxTaskStatusArray, UBaseType_t *uxArraySize)
+{
+    uint32_t ulTotalTime;
 
-/* yield the next highest prio task */
-extern void vPortYield(void);
+    /* Take a snapshot of the number of tasks in case it changes while this
+    function is executing. */
+    *uxArraySize = uxTaskGetNumberOfTasks();
 
-/* start the first task */
-extern void vPortStartFirstTask(void);
+    /* Allocate an array index for each task.  NOTE!  If
+    configSUPPORT_DYNAMIC_ALLOCATION is set to 0 then pvPortMalloc() will
+    equate to NULL. */
+    pxTaskStatusArray = pvPortMalloc((*uxArraySize) * sizeof(TaskStatus_t));
 
-/* set first task context */
-extern void vPortSetFirstTaskContext(void);
+    if( pxTaskStatusArray != NULL ) {
+        *uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, (*uxArraySize), &ulTotalTime);
+    }
 
-/* svc C handler */
-extern void vPortServiceHandler(uint32_t *svc_args);
-
-/* privilege control */
-extern void vPortRaisePrivilege(void);
-extern void vPortResetPrivilege(void);
-
-/* critical section handling */
-extern void vPortEnterCritical(void);
-extern void vPortExitCritical(void);
-
-/* assertion */
-extern void vPortAssert(const int);
-
-/* validate the priotity of interupts calling FromISR functions */
-extern void vPortValidateInterruptPriority(void);
-
-/* stats gathering function */
-extern void vPortConfigureStatsTimer(void);
-extern uint32_t vPortGetStatsTimerValue(void);
+    return ulTotalTime;
+}

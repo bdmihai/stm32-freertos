@@ -108,11 +108,17 @@ typedef unsigned long UBaseType_t;
 #endif /* configUSE_PORT_OPTIMISED_TASK_SELECTION */
 
 /* assertions enabled */
-#define configASSERT( x ) if( ( x ) == 0 )  vAssertBlink(1)
+#define configASSERT( x ) if( ( x ) == 0 )  vPortAssert(1)
 
 #ifdef configASSERT
 	#define portASSERT_IF_INTERRUPT_PRIORITY_INVALID() 	vPortValidateInterruptPriority()
 #endif /* configASSERT */
+
+/* stats utilities */
+#if configGENERATE_RUN_TIME_STATS == 1
+	#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() vPortConfigureStatsTimer()
+	#define portGET_RUN_TIME_COUNTER_VALUE()         vPortGetStatsTimerValue()
+#endif
 
 #ifdef __cplusplus
 }

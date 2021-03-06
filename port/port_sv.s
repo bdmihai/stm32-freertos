@@ -27,52 +27,52 @@
  
 .syntax unified
 
-.global vRaisePrivilege
-.global vResetPrivilege
-.global vStartFirstTask
-.global vSetFirstTaskContext
+.global vPortRaisePrivilege
+.global vPortResetPrivilege
+.global vPortStartFirstTask
+.global vPortSetFirstTaskContext
 .global SVC_Handler
 .global PendSV_Handler
 
 /*-----------------------------------------------------------*/
-/*                       vRaisePrivilege                     */
+/*                     vPortRaisePrivilege                   */
 /*-----------------------------------------------------------*/
-.section .text.vRaisePrivilege, "ax", %progbits
-.type vRaisePrivilege, %function
+.section .text.vPortRaisePrivilege, "ax", %progbits
+.type vPortRaisePrivilege, %function
 
 /* This function sets the elevated privileges */
-vRaisePrivilege:
+vPortRaisePrivilege:
     mrs r1, control
     bic r1, #1
     msr control, r1
     bx lr
 
-.size vRaisePrivilege, .-vRaisePrivilege
+.size vPortRaisePrivilege, .-vPortRaisePrivilege
 
 /*-----------------------------------------------------------*/
-/*                       vResetPrivilege                     */
+/*                     vPortResetPrivilege                   */
 /*-----------------------------------------------------------*/
-.section .text.vResetPrivilege, "ax", %progbits
-.type vResetPrivilege, %function
+.section .text.vPortResetPrivilege, "ax", %progbits
+.type vPortResetPrivilege, %function
 
 /* This function resets the elevated privileges */
-vResetPrivilege:
+vPortResetPrivilege:
     mrs r0, control
     orr r0, #1
     msr control, r0	
     bx lr
 
-.size vResetPrivilege, .-vResetPrivilege
+.size vPortResetPrivilege, .-vPortResetPrivilege
 
 /*-----------------------------------------------------------*/
-/*                       vStartFirstTask                     */
+/*                     vPortStartFirstTask                   */
 /*-----------------------------------------------------------*/
-.section .text.vStartFirstTask, "ax", %progbits
-.type vStartFirstTask, %function
+.section .text.vPortStartFirstTask, "ax", %progbits
+.type vPortStartFirstTask, %function
 
 /* This function starts the first task by executing the Supervisor Call command. In 
 this way the context of the first task is executed. */
-vStartFirstTask:
+vPortStartFirstTask:
     /* set the msp back to the start of the stack. */
     ldr r0, =__stack_end
     msr msp, r0
@@ -88,16 +88,16 @@ vStartFirstTask:
     nop
 
 .word __stack_end
-.size vStartFirstTask, .-vStartFirstTask
+.size vPortStartFirstTask, .-vPortStartFirstTask
 
 /*-----------------------------------------------------------*/
-/*                    vSetFirstTaskContext                   */
+/*                  vPortSetFirstTaskContext                 */
 /*-----------------------------------------------------------*/
-.section .text.vSetFirstTaskContext, "ax", %progbits
-.type vSetFirstTaskContext, %function
+.section .text.vPortSetFirstTaskContext, "ax", %progbits
+.type vPortSetFirstTaskContext, %function
 
 /* This function sets the context of the first task and returns into this task. */
-vSetFirstTaskContext:
+vPortSetFirstTaskContext:
     /* get the location of the pxCurrentTCB */
     ldr	r3, pxCurrentTCBConst2
     ldr r1, [r3]
@@ -127,7 +127,7 @@ vSetFirstTaskContext:
     .align 4
 pxCurrentTCBConst2: .word pxCurrentTCB
 
-.size vSetFirstTaskContext, .-vSetFirstTaskContext
+.size vPortSetFirstTaskContext, .-vPortSetFirstTaskContext
 
 /*-----------------------------------------------------------*/
 /*                         SVC_Handler                       */
@@ -144,7 +144,7 @@ SVC_Handler:
     ite eq
     mrseq r0, msp
     mrsne r0, psp
-    b vServiceHandler
+    b vPortServiceHandler
 
 .size SVC_Handler, .-SVC_Handler
 

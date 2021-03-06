@@ -51,7 +51,7 @@ __attribute__((weak)) void blink(const int n)
  *
  * @param n how many times to blink.
  */
-void vAssertBlink(const int n)
+void vPortAssert(const int n)
 {
     blink(n);
 }
@@ -63,7 +63,7 @@ void vAssertBlink(const int n)
  * as there is nothing to return to. If a task wants to exit it should instead call
  * vTaskDelete.
  */
-void vTaskExitError( void )
+void vPortTaskExitError( void )
 {
     volatile uint32_t ulDummy = 0UL;
 
