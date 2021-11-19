@@ -27,7 +27,6 @@
 
 #include "stm32rtos.h"
 #include "stm32f4xx.h"
-#include "stm32f4xx_hal.h"
 #include "task.h"
 #include "port.h"
 
@@ -55,7 +54,7 @@ BaseType_t xPortStartScheduler(void)
 
     /* set interrupt group priority (https://www.freertos.org/RTOS-Cortex-M3-M4.html) */
     /* 4 bits for pre-emption priority, 0 bits for subpriority */
-    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+    NVIC_SetPriorityGrouping(portNVIC_PRIORITYGROUP_4);
 
     /* make PendSV the lowest priority interrupts */
     NVIC_SetPriority(PendSV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), (configKERNEL_INTERRUPT_PRIORITY >> (8U - __NVIC_PRIO_BITS)), 0U));

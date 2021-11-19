@@ -33,7 +33,6 @@ Product {
 
     Depends { name: "stm32" }
     Depends { name: "cmsis" }
-    Depends { name: "hal" }
     stm32.includePaths: [ "inc", "port" ]
 
     files: [
