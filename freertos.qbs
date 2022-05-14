@@ -45,8 +45,8 @@ Product {
 
     Export {
         Depends { name: "stm32" }
-        stm32.includePaths: product.stm32.includePaths
-        stm32.libraryPaths: [ product.destinationDirectory ]
+        stm32.includePaths: exportingProduct.stm32.includePaths
+        stm32.libraryPaths: [ exportingProduct.destinationDirectory ]
         stm32.linkerFlags: ["-Wl,--undefined=uxTopUsedPriority"]
     }
 }
