@@ -160,8 +160,8 @@ PendSV_Handler:
     isb
 
     /* get the location of the pxCurrentTCB */
-    ldr	r3, pxCurrentTCBConst
-    ldr	r2, [r3]
+    ldr	r2, pxCurrentTCBConst
+    ldr	r1, [r2]
 
     /* backup the fpu registers to the task stack */
     tst r14, #0x10
@@ -172,10 +172,10 @@ PendSV_Handler:
     stmdb r0!, {r4-r11, r14}
 
     /* first item in pxCurrentTCB is the task top of stack - update with the new value */
-    str r0, [r2]
+    str r0, [r1]
     
     /* backup necessary scratch registers to stack - keep stack 8 bytes aligned */
-    stmdb sp!, {r0, r3}
+    stmdb sp!, {r0, r2}
 
     /* disable interupts with lower priority as the max syscall to avoid inconsistent 
     data changes from interupts where FromISR functions get called */
@@ -193,10 +193,10 @@ PendSV_Handler:
     msr basepri, r0	
 
     /* restore necessary scratch registers from stack */
-    ldmia sp!, {r0, r3}
+    ldmia sp!, {r0, r2}
 
     /* first item in pxCurrentTCB is the task top of stack */
-    ldr r1, [r3]                  
+    ldr r1, [r2]                  
     ldr r0, [r1]
 
     /* restore the core registers from the task stack */
