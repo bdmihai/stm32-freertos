@@ -28,25 +28,31 @@
 import qbs.FileInfo
 
 Product {
-    name: "freertos"
-    type: "lib"
+    name: 'freertos'
+    type: 'lib'
 
-    Depends { name: "stm32" }
-    Depends { name: "cmsis" }
-    stm32.includePaths: [ "inc", "port" ]
+    Depends { name: 'stm32' }
+    Depends { name: 'cmsis' }
+
+    stm32.includePaths: [ 'inc', 'port' ]
 
     files: [
-        "inc/*.h",
-        "src/*.c",
-        "port/*.c",
-        "port/*.h",
-        "port/*.s",
+        'inc/*.h',
+        'src/*.c',
+        'port/*.c',
+        'port/*.h',
+        'port/*.s',
     ]
 
     Export {
-        Depends { name: "stm32" }
-        stm32.includePaths: exportingProduct.stm32.includePaths
+        Depends { name: 'stm32' }
+        Depends { name: 'cmsis' }
+
+        stm32.includePaths: [
+            FileInfo.joinPaths(exportingProduct.sourceDirectory, '/inc'),
+            FileInfo.joinPaths(exportingProduct.sourceDirectory, '/port')
+        ]
         stm32.libraryPaths: [ exportingProduct.destinationDirectory ]
-        stm32.linkerFlags: ["-Wl,--undefined=uxTopUsedPriority"]
+        stm32.linkerFlags: ['-Wl,--undefined=uxTopUsedPriority']
     }
 }

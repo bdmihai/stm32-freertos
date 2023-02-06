@@ -1,6 +1,6 @@
 /*_____________________________________________________________________________
  │                                                                            |
- │ COPYRIGHT (C) 2021 Mihai Baneu                                             |
+ │ COPYRIGHT (C) 2023 Mihai Baneu                                             |
  │                                                                            |
  | Permission is hereby  granted,  free of charge,  to any person obtaining a |
  | copy of this software and associated documentation files (the "Software"), |
@@ -21,7 +21,7 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
+ |  Author: Mihai Baneu                           Last modified: 06.Feb.2023  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
@@ -31,30 +31,7 @@
 #include "portmacro.h"
 #include "port.h"
 
-/**
- * @brief Blink n times.
- *
- * This is a dummy function as the real blink should be implemented by application.
- *
- */
-__attribute__((weak)) void blink(const int n)
-{
-    (void)(n);
-
-    while (1) {
-        __asm volatile("nop");
-    }
-}
-
-/**
- * @brief Blink n times.
- *
- * @param n how many times to blink.
- */
-void vPortAssert(const int n)
-{
-    blink(n);
-}
+extern void panic(const char *fmt, ...);
 
 /**
  * @brief Used to catch tasks that attempt to return from their implementing function.
@@ -65,19 +42,7 @@ void vPortAssert(const int n)
  */
 void vPortTaskExitError( void )
 {
-    volatile uint32_t ulDummy = 0UL;
-
-    /* Artificially force an assert() to be triggered if configASSERT() is defined,
-    then stop here so application writers can catch the error. */
-    configASSERT( uxCriticalNesting == ~0UL );
-    portDISABLE_INTERRUPTS();
-    while( ulDummy == 0 ) {
-        /* ulDummy is used purely to quieten other warnings
-        about code appearing after this function is called - making ulDummy
-        volatile makes the compiler think the function could return and
-        therefore not output an 'unreachable code' warning for code that appears
-        after it. */
-    }
+    panic("vPortTaskExitError: a function that implements a task must not exit or attempt to return");
 }
 
 /**
@@ -96,7 +61,7 @@ void vPortTaskExitError( void )
  */
 void vApplicationMallocFailedHook()
 {
-    blink(2);
+    panic("vApplicationMallocFailedHook: malloc failed");
 }
 
 /**
@@ -111,7 +76,7 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
 {
     (void)pcTaskName;
     (void)pxTask;
-    blink(3);
+    panic("vApplicationStackOverflowHook: stack overflow is detected in %s", pcTaskName);
 }
 
 /**

@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <assert.h>
 #include "cmsis_gcc.h"
 #include "port.h"
 
@@ -116,7 +117,7 @@ typedef unsigned long UBaseType_t;
 #endif /* configUSE_PORT_OPTIMISED_TASK_SELECTION */
 
 /* assertions enabled */
-#define configASSERT( x ) if( ( x ) == 0 )  vPortAssert(1)
+#define configASSERT( x ) assert( x )
 
 #ifdef configASSERT
 	#define portASSERT_IF_INTERRUPT_PRIORITY_INVALID() 	vPortValidateInterruptPriority()

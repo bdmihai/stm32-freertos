@@ -59,9 +59,6 @@ extern void vPortResetPrivilege(void);
 extern void vPortEnterCritical(void);
 extern void vPortExitCritical(void);
 
-/* assertion */
-extern void vPortAssert(const int);
-
 /* validate the priotity of interupts calling FromISR functions */
 extern void vPortValidateInterruptPriority(void);
 

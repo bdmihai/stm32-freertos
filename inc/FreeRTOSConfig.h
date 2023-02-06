@@ -42,9 +42,9 @@
 
 #define configENABLE_FPU                         1
 #define configUSE_PREEMPTION                     1
-#define configSUPPORT_STATIC_ALLOCATION          0
+#define configSUPPORT_STATIC_ALLOCATION          1
 #define configSUPPORT_DYNAMIC_ALLOCATION         1
-#define configUSE_IDLE_HOOK                      0
+#define configUSE_IDLE_HOOK                      1
 #define configUSE_TICK_HOOK                      0
 #define configUSE_MALLOC_FAILED_HOOK             1
 #define configCHECK_FOR_STACK_OVERFLOW           1
@@ -52,7 +52,6 @@
 #define configTICK_RATE_HZ                       ( (TickType_t) 1000 )
 #define configMAX_PRIORITIES                     16
 #define configMINIMAL_STACK_SIZE                 ( (uint16_t) 128 )
-#define configTOTAL_HEAP_SIZE                    ( (size_t) 16 * 1024 )
 #define configMAX_TASK_NAME_LEN                  16
 #define configRECORD_STACK_HIGH_ADDRESS          1
 #define configUSE_TRACE_FACILITY                 1
@@ -89,14 +88,16 @@ to exclude the API function. */
 #define INCLUDE_uxTaskGetStackHighWaterMark      1
 #define INCLUDE_eTaskGetState                    1
 
-/* +++ cortex-M uses 4 bits PreemptPriority/SubPriority -> NVIC_PRIORITYGROUP_4 (all 4 bits used for preempt)
+/* 
+   +++ cortex-M uses 4 bits PreemptPriority/SubPriority -> NVIC_PRIORITYGROUP_4 (all 4 bits used for preempt)
    +++ configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to zero
    +++ any interrupt service routine that uses an RTOS API function must have its priority manually set to a value that is numerically equal to or greater than the configMAX_SYSCALL_INTERRUPT_PRIORITY
-   See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
+   See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. 
+*/
 
 /* Interrupt priorities used by the kernel port layer itself - lowest possible */
 #define configKERNEL_INTERRUPT_PRIORITY         0b11110000
-/* */
+/* maximum priority for ISR that can work with the rtos */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY 	0b10000000
 
 #endif /* FREERTOS_CONFIG_H */
