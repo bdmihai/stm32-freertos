@@ -1,6 +1,6 @@
 /*_____________________________________________________________________________
  │                                                                            |
- │ COPYRIGHT (C) 2021 Mihai Baneu                                             |
+ │ COPYRIGHT (C) 2023 Mihai Baneu                                             |
  │                                                                            |
  | Permission is hereby  granted,  free of charge,  to any person obtaining a |
  | copy of this software and associated documentation files (the "Software"), |
@@ -21,45 +21,42 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 24.Jan.2021  |
+ |  Author: Mihai Baneu                           Last modified: 08.Feb.2023  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
  
 .syntax unified
 
-.global vPortRaisePrivilege
-.global vPortResetPrivilege
-.global vPortStartFirstTask
-.global vPortSetFirstTaskContext
-.global SVC_Handler
-.global PendSV_Handler
-
 /*-----------------------------------------------------------*/
-/*                     vPortRaisePrivilege                   */
+/*                     uxPortRaisePrivilege                  */
 /*-----------------------------------------------------------*/
-.section .text.vPortRaisePrivilege, "ax", %progbits
-.type vPortRaisePrivilege, %function
+.section .text.uxPortRaisePrivilege, "ax", %progbits
+.global uxPortRaisePrivilege
+.type uxPortRaisePrivilege, %function
 
 /* This function sets the elevated privileges */
-vPortRaisePrivilege:
+uxPortRaisePrivilege:
     mrs r1, control
+    mov r0, r1
+    and r0, #1
     bic r1, #1
     msr control, r1
     bx lr
 
-.size vPortRaisePrivilege, .-vPortRaisePrivilege
+.size uxPortRaisePrivilege, .-uxPortRaisePrivilege
 
 /*-----------------------------------------------------------*/
 /*                     vPortResetPrivilege                   */
 /*-----------------------------------------------------------*/
 .section .text.vPortResetPrivilege, "ax", %progbits
+.global vPortResetPrivilege
 .type vPortResetPrivilege, %function
 
 /* This function resets the elevated privileges */
 vPortResetPrivilege:
-    mrs r0, control
-    orr r0, #1
-    msr control, r0	
+    mrs r1, control
+    orr r1, r0
+    msr control, r1	
     bx lr
 
 .size vPortResetPrivilege, .-vPortResetPrivilege
@@ -68,6 +65,7 @@ vPortResetPrivilege:
 /*                     vPortStartFirstTask                   */
 /*-----------------------------------------------------------*/
 .section .text.vPortStartFirstTask, "ax", %progbits
+.global vPortStartFirstTask
 .type vPortStartFirstTask, %function
 
 /* This function starts the first task by executing the Supervisor Call command. In 
@@ -94,6 +92,7 @@ vPortStartFirstTask:
 /*                  vPortSetFirstTaskContext                 */
 /*-----------------------------------------------------------*/
 .section .text.vPortSetFirstTaskContext, "ax", %progbits
+.global vPortSetFirstTaskContext
 .type vPortSetFirstTaskContext, %function
 
 /* This function sets the context of the first task and returns into this task. */
@@ -133,6 +132,7 @@ pxCurrentTCBConst2: .word pxCurrentTCB
 /*                         SVC_Handler                       */
 /*-----------------------------------------------------------*/
 .section .text.SVC_Handler, "ax", %progbits
+.global SVC_Handler
 .type SVC_Handler, %function
 
 /* This is the SuperVisor Call Handler -> forward to C for sevice*/
@@ -152,6 +152,7 @@ SVC_Handler:
 /*                       PendSV_Handler                      */
 /*-----------------------------------------------------------*/
 .section .text.PendSV_Handler, "ax", %progbits
+.global PendSV_Handler
 .type PendSV_Handler, %function
 
 PendSV_Handler:
@@ -220,3 +221,42 @@ pxCurrentTCBConst: .word pxCurrentTCB
 uxMaxSyscallPriorityConst: .word uxMaxSyscallPriority
 
 .size PendSV_Handler, .-PendSV_Handler
+
+/*-----------------------------------------------------------*/
+/*                        vPortSendChar                      */
+/*-----------------------------------------------------------*/
+.section .text.vPortSendChar, "ax", %progbits
+.global vPortSendChar
+.type vPortSendChar, %function
+
+vPortSendChar:
+    svc 55
+    bx lr
+
+/*-----------------------------------------------------------*/
+/*                        uxPortCheckChar                    */
+/*-----------------------------------------------------------*/
+.section .text.uxPortCheckChar, "ax", %progbits
+.global uxPortCheckChar
+.type uxPortCheckChar, %function
+
+uxPortCheckChar:
+    svc 56
+    bx lr
+
+.size uxPortCheckChar, .-uxPortCheckChar
+
+/*-----------------------------------------------------------*/
+/*                        ucPortGetChar                      */
+/*-----------------------------------------------------------*/
+.section .text.ucPortGetChar, "ax", %progbits
+.global ucPortGetChar
+.type ucPortGetChar, %function
+
+ucPortGetChar:
+    svc 57
+    bx lr
+
+.size ucPortGetChar, .-ucPortGetChar
+
+.end

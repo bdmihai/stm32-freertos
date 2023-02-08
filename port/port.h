@@ -1,6 +1,6 @@
 /*_____________________________________________________________________________
  │                                                                            |
- │ COPYRIGHT (C) 2021 Mihai Baneu                                             |
+ │ COPYRIGHT (C) 2023 Mihai Baneu                                             |
  │                                                                            |
  | Permission is hereby  granted,  free of charge,  to any person obtaining a |
  | copy of this software and associated documentation files (the "Software"), |
@@ -21,7 +21,7 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 24.Jan.2021  |
+ |  Author: Mihai Baneu                           Last modified: 08.Feb.2023  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
@@ -52,8 +52,8 @@ extern void vPortSetFirstTaskContext(void);
 extern void vPortServiceHandler(uint32_t *svc_args);
 
 /* privilege control */
-extern void vPortRaisePrivilege(void);
-extern void vPortResetPrivilege(void);
+extern uint32_t uxPortRaisePrivilege(void);
+extern void vPortResetPrivilege(uint32_t priv);
 
 /* critical section handling */
 extern void vPortEnterCritical(void);
@@ -65,3 +65,8 @@ extern void vPortValidateInterruptPriority(void);
 /* stats gathering function */
 extern void vPortConfigureStatsTimer(void);
 extern uint32_t vPortGetStatsTimerValue(void);
+
+/* service calls */
+extern void vPortSendChar(char c);
+extern uint32_t uxPortCheckChar();
+extern char ucPortGetChar();

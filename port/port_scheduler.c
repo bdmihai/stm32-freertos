@@ -1,6 +1,6 @@
 /*_____________________________________________________________________________
  │                                                                            |
- │ COPYRIGHT (C) 2021 Mihai Baneu                                             |
+ │ COPYRIGHT (C) 2023 Mihai Baneu                                             |
  │                                                                            |
  | Permission is hereby  granted,  free of charge,  to any person obtaining a |
  | copy of this software and associated documentation files (the "Software"), |
@@ -21,7 +21,7 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 24.Jan.2021  |
+ |  Author: Mihai Baneu                           Last modified: 08.Feb.2023  |
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
@@ -131,46 +131,4 @@ void vPortExitCritical(void)
     if( uxCriticalNesting == 0 ) {
         portENABLE_INTERRUPTS();
     }
-}
-
-/**
- * @brief Handler for the Supervisor Call.
- * 
- * @param svc_args 
- */
-void vPortServiceHandler(uint32_t *svc_args)
-{
-    uint8_t svc_number = ((char *) svc_args[6])[-2]; //Memory[(Stacked PC)-2]
-    // r0 = svc_args[0];
-    // r1 = svc_args[1];
-    // r2 = svc_args[2];
-    // r3 = svc_args[3];
-
-    switch (svc_number)
-    {
-        case 0:
-            vPortSetFirstTaskContext();
-            break;
-        case 1:
-            vPortRaisePrivilege();
-            vPortYield();
-            vPortResetPrivilege();
-            break;
-    }
-}
-
-/**
- * @brief Yield the next task that needs to be executed.
- *
- * The PendSV interrupt is activated for changin the context.
- *
- */
-void vPortYield(void)
-{
-    /* context switching is performed in the PendSV interrupt. Pend the PendSV interrupt. */
-    SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
-
-    /* Data Synchronization Barrier and Instruction Synchronization Barrier */
-    __DSB();
-    __ISB();
 }
