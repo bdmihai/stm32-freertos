@@ -74,6 +74,9 @@ void vPortServiceHandler(uint32_t *svc_args)
             vPortYield();
             vPortResetPrivilege(priv);
             break;
+        case 2:
+            vPortYield();
+            break;
         case 55:
             priv = uxPortRaisePrivilege();
             ITM_SendChar(svc_args[0]);

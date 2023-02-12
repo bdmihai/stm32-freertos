@@ -75,15 +75,13 @@ vPortStartFirstTask:
     ldr r0, =__stack_end
     msr msp, r0
     
-    /* globally enable interrupts. */
-    cpsie i
+    /* globally enable faults. */
     cpsie f
     dsb
     isb
 
     /* system call to start first task. */
     svc 0
-    nop
 
 .word __stack_end
 .size vPortStartFirstTask, .-vPortStartFirstTask
@@ -111,7 +109,7 @@ vPortSetFirstTaskContext:
     msr psp, r0
     isb
 
-    /* enable the interrupts */
+    /* enable the interrupts for all priorities */
     mov r0, #0
     msr	basepri, r0
 
@@ -120,7 +118,12 @@ vPortSetFirstTaskContext:
     orr r0, #1
     msr control, r0
 
-    /* return from handler mode */
+    /* globally enable interrupts. */
+    cpsie i
+    dsb
+    isb
+
+    /* return from handler mode to thread mode: basically pops r0-r4, r12, r14, psr */
     bx r14
 
     .align 4
@@ -135,11 +138,8 @@ pxCurrentTCBConst2: .word pxCurrentTCB
 .global SVC_Handler
 .type SVC_Handler, %function
 
-/* This is the SuperVisor Call Handler -> forward to C for sevice*/
+/* This is the SuperVisor Call Handler -> forward to C for sevice */
 SVC_Handler:
-    mrs r0, control
-    bic r0, #1
-    msr control, r0
     tst lr, #4
     ite eq
     mrseq r0, msp
