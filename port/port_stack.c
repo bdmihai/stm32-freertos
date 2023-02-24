@@ -73,8 +73,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     pxTopOfStack--;
     *pxTopOfStack = (StackType_t) pvParameters;                           			/* R0 */
 
-    /* A save method is being used that requires each task to maintain its
-    own exec return value. */
+    /* assume that we always return from handler mode to thread mode */
     pxTopOfStack--;
     *pxTopOfStack = portINITIAL_EXC_RETURN;                                 		/* R14 */
 

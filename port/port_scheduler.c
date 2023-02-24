@@ -67,17 +67,10 @@ BaseType_t xPortStartScheduler(void)
     SCB->CPACR |= (0xFUL << 20);
     FPU->FPCCR |= (FPU_FPCCR_ASPEN_Msk | FPU_FPCCR_LSPEN_Msk);
 
-    /* this clears the bit that indicates the FPU is in use in case the FPU was used before
-    the scheduler gets started - which would otherwise result in the unnecessary leaving of
-    space in the SVC stack for lazy saving of FPU registers */
-    __set_CONTROL(0);
-    __ISB();
-
     /* Initialise the critical nesting count ready for the first task. */
     uxCriticalNesting = 0;
 
-    /* Start the timer that generates the tick ISR.  Interrupts are disabled
-    here already. */
+    /* start the timer that generates the tick ISR - interupts are disabled */
     vPortConfigureSysTick();
 
     /* start the first task */

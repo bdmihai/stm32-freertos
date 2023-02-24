@@ -74,6 +74,13 @@ vPortStartFirstTask:
     /* set the msp back to the start of the stack. */
     ldr r0, =__stack_end
     msr msp, r0
+
+    /* this clears the bit that indicates the FPU is in use in case the FPU was used before
+    the scheduler gets started - which would otherwise result in the unnecessary leaving of
+    space in the SVC stack for lazy saving of FPU registers */
+    mrs r0, control
+    bic r0, #4
+    msr control, r0
     
     /* globally enable faults. */
     cpsie f
@@ -96,7 +103,7 @@ vPortStartFirstTask:
 /* This function sets the context of the first task and returns into this task. */
 vPortSetFirstTaskContext:
     /* get the location of the pxCurrentTCB */
-    ldr	r3, pxCurrentTCBConst2
+    ldr	r3, =pxCurrentTCB
     ldr r1, [r3]
 
     /* first item in pxCurrentTCB is the task top of stack */
@@ -123,11 +130,12 @@ vPortSetFirstTaskContext:
     dsb
     isb
 
-    /* return from handler mode to thread mode: basically pops r0-r4, r12, r14, psr */
+    /* return from handler mode to thread mode: basically pops r0-r4, r12, r14(lr), r15(pc), psr */
     bx r14
 
-    .align 4
-pxCurrentTCBConst2: .word pxCurrentTCB
+.align 4
+vPortSetFirstTaskContext_Locals: 
+    .word pxCurrentTCB
 
 .size vPortSetFirstTaskContext, .-vPortSetFirstTaskContext
 
@@ -161,7 +169,7 @@ PendSV_Handler:
     isb
 
     /* get the location of the pxCurrentTCB */
-    ldr	r2, pxCurrentTCBConst
+    ldr	r2, PendSV_Handler_Locals
     ldr	r1, [r2]
 
     /* backup the fpu registers to the task stack */
@@ -178,10 +186,10 @@ PendSV_Handler:
     /* backup necessary scratch registers to stack - keep stack 8 bytes aligned */
     stmdb sp!, {r0, r2}
 
-    /* disable interupts with lower priority as the max syscall to avoid inconsistent 
-    data changes from interupts where FromISR functions get called */
-    ldr r0, uxMaxSyscallPriorityConst
-    ldr r0, [r0]
+    /* disable interupts with lower priority as the max syscall (uxMaxSyscallPriority) 
+    to avoid inconsistent data changes from interupts where FromISR functions get called */
+    ldr r0, PendSV_Handler_Locals
+    ldr r0, [r0, #4]
     msr basepri, r0
     dsb
     isb
@@ -215,10 +223,10 @@ PendSV_Handler:
     /* return from handler mode */
     bx r14
 
-    .align 4
-pxCurrentTCBConst: .word pxCurrentTCB
-    .align 4
-uxMaxSyscallPriorityConst: .word uxMaxSyscallPriority
+.align 4
+PendSV_Handler_Locals: 
+    .word pxCurrentTCB 
+    .word uxMaxSyscallPriority
 
 .size PendSV_Handler, .-PendSV_Handler
 
