@@ -51,3 +51,19 @@ __attribute__((weak)) void vApplicationTickHook() { }
  *
  */
 __attribute__((weak)) void vApplicationIdleHook(void) { }
+
+/**
+ * The RTOS daemon task is the same as the Timer Service Task. Sometimes it is 
+ * referred to as the daemon task because the task is now used for more than 
+ * just servicing timers.
+ * If configUSE_DAEMON_TASK_STARTUP_HOOK is set to 1 in FreeRTOSConfig.h then the 
+ * Daemon Task Startup Hook will be called as soon as the Daemon Task starts 
+ * executing for the first time. This is useful if the application includes 
+ * initialisation code that would benefit from executing after the scheduler has 
+ * been started, which allows the initialisation code to make use of the RTOS 
+ * functionality.
+ * 
+ * If configUSE_DAEMON_TASK_STARTUP_HOOK is set to 1 then the application writer 
+ * must provide an implementation of the Daemon Task startup hook function.
+ */
+__attribute__((weak)) void vApplicationDaemonTaskStartupHook(void) {}
