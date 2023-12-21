@@ -39,8 +39,8 @@ extern void vPortTaskExitError(void);
 /* setup the systick timer */
 extern void vPortConfigureSysTick(void);
 
-/* yield the next highest prio task */
-extern void vPortYield(void);
+/* yield the next highest prio task from a priviledged mode */
+extern void vPortYieldFromISR(void);
 
 /* start the first task */
 extern void vPortStartFirstTask(void);

@@ -37,10 +37,11 @@ volatile int32_t ITM_RxBuffer = ITM_RXBUFFER_EMPTY; // Initialize as EMPTY
 /**
  * @brief Yield the next task that needs to be executed.
  *
- * The PendSV interrupt is activated for changin the context.
+ * The PendSV interrupt is activated for changin the context. This is executed while in
+ * handler mode.
  *
  */
-void vPortYield(void)
+void vPortYieldFromISR(void)
 {
     /* context switching is performed in the PendSV interrupt. Pend the PendSV interrupt. */
     SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
@@ -58,7 +59,6 @@ void vPortYield(void)
 void vPortServiceHandler(uint32_t *svc_args)
 {
     uint8_t svc_number = ((char *) svc_args[6])[-2]; //Memory[(Stacked PC)-2]
-    uint32_t priv;
     // r0 = svc_args[0];
     // r1 = svc_args[1];
     // r2 = svc_args[2];
@@ -70,27 +70,16 @@ void vPortServiceHandler(uint32_t *svc_args)
             vPortSetFirstTaskContext();
             break;
         case 1:
-            priv = uxPortRaisePrivilege();
-            vPortYield();
-            vPortResetPrivilege(priv);
-            break;
-        case 2:
-            vPortYield();
+            vPortYieldFromISR();
             break;
         case 55:
-            priv = uxPortRaisePrivilege();
             ITM_SendChar(svc_args[0]);
-            vPortResetPrivilege(priv);
             break;
         case 56:
-            priv = uxPortRaisePrivilege();
             svc_args[0] = ITM_CheckChar();
-            vPortResetPrivilege(priv);
             break;
         case 57:
-            priv = uxPortRaisePrivilege();
             svc_args[0] = ITM_ReceiveChar();
-            vPortResetPrivilege(priv);
             break;
     }
 }

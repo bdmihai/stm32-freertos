@@ -65,7 +65,7 @@ void SysTick_Handler(void)
         the PendSV interrupt */
         if( xTaskIncrementTick() != pdFALSE ) {
             /* a context switch is required to allow the next task to run */
-            vPortYield();
+            vPortYieldFromISR();
         }
     }
     portENABLE_INTERRUPTS();

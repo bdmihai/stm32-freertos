@@ -120,7 +120,7 @@ vPortSetFirstTaskContext:
     mov r0, #0
     msr	basepri, r0
 
-    /* reset privileges */
+    /* reset privileges - nPRIV set to 1 for unpriveledged execution in Thread Mode */
     mrs r0, control
     orr r0, #1
     msr control, r0
