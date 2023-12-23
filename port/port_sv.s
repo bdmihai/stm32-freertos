@@ -142,7 +142,7 @@ vPortSetFirstTaskContext_Locals:
 /*-----------------------------------------------------------*/
 /*                         SVC_Handler                       */
 /*-----------------------------------------------------------*/
-.section .text.SVC_Handler, "ax", %progbits
+.section .time_critical.SVC_Handler, "ax", %progbits
 .global SVC_Handler
 .type SVC_Handler, %function
 
@@ -159,7 +159,7 @@ SVC_Handler:
 /*-----------------------------------------------------------*/
 /*                       PendSV_Handler                      */
 /*-----------------------------------------------------------*/
-.section .text.PendSV_Handler, "ax", %progbits
+.section .time_critical.PendSV_Handler, "ax", %progbits
 .global PendSV_Handler
 .type PendSV_Handler, %function
 

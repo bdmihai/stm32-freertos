@@ -86,7 +86,7 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
  * the correct prio set: smaller or eq to
  *
  */
-void vPortValidateInterruptPriority( void )
+void __attribute__((section(".time_critical.vPortValidateInterruptPriority"))) vPortValidateInterruptPriority( void )
 {
     uint32_t ulCurrentInterrupt;
     uint8_t ucCurrentPriority;

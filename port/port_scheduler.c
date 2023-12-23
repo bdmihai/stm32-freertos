@@ -105,7 +105,7 @@ void vPortEndScheduler(void)
  * Interupts are disabled.
  *
  */
-void vPortEnterCritical(void)
+void __attribute__((section(".time_critical.vPortEnterCritical"))) vPortEnterCritical(void)
 {
     portDISABLE_INTERRUPTS();
     uxCriticalNesting++;
@@ -117,7 +117,7 @@ void vPortEnterCritical(void)
  * If the nexting is 0 then the interupts get enabled.
  *
  */
-void vPortExitCritical(void)
+void __attribute__((section(".time_critical.vPortExitCritical"))) vPortExitCritical(void)
 {
     configASSERT(uxCriticalNesting);
     uxCriticalNesting--;

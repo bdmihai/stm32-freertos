@@ -41,7 +41,7 @@ volatile int32_t ITM_RxBuffer = ITM_RXBUFFER_EMPTY; // Initialize as EMPTY
  * handler mode.
  *
  */
-void vPortYieldFromISR(void)
+void __attribute__((section(".time_critical.vPortYieldFromISR"))) vPortYieldFromISR(void)
 {
     /* context switching is performed in the PendSV interrupt. Pend the PendSV interrupt. */
     SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
@@ -56,7 +56,7 @@ void vPortYieldFromISR(void)
  * 
  * @param svc_args 
  */
-void vPortServiceHandler(uint32_t *svc_args)
+void __attribute__((section(".time_critical.vPortServiceHandler"))) vPortServiceHandler(uint32_t *svc_args)
 {
     uint8_t svc_number = ((char *) svc_args[6])[-2]; //Memory[(Stacked PC)-2]
     // r0 = svc_args[0];

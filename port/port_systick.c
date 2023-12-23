@@ -57,7 +57,7 @@ void vPortConfigureSysTick(void)
  * save and then restore the interrupt mask value as its value is already
  * known.
  */
-void SysTick_Handler(void)
+void __attribute__((section(".time_critical.SysTick_Handler"))) SysTick_Handler(void)
 {
     portDISABLE_INTERRUPTS();
     {
