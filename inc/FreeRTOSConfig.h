@@ -22,7 +22,7 @@
  * The default value is set to 20MHz and matches the QEMU demo settings.  Your
  * application will certainly need a different value so set this correctly.
  * This is very often, but not always, equal to the main system clock frequency. */
-#define configCPU_CLOCK_HZ                         96000000U
+#define configCPU_CLOCK_HZ                         system_cpu_f()
 
 
 /******************************************************************************/

@@ -21,38 +21,45 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 02.Jan.2021  |
- |                                                                            |
+ |  Author: Mihai Baneu                           Last modified: 26.Jan.2021  |
+ |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
-import qbs.FileInfo
+#include "stm32rtos.h"
+#include "stm32f1xx.h"
+#include "portmacro.h"
+#include "port.h"
+#include "task.h"
 
-Product {
-    name: 'freertos'
-    type: 'lib'
 
-    Depends { name: 'stm32' }
-    Depends { name: 'cmsis' }
+void vPortConfigureStatsTimer(void)
+{
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    DWT->CYCCNT = 0;
+}
 
-    stm32.includePaths: [ 'inc', FileInfo.joinPaths('port', stm32.targetSeries) ]
+uint32_t vPortGetStatsTimerValue(void)
+{
+    return DWT->CYCCNT;
+}
 
-    files: [
-        'inc/*.h',
-        'src/*.c',
-        'port/' + stm32.targetSeries + '/*.c',
-        'port/' + stm32.targetSeries + '/*.h',
-        'port/' + stm32.targetSeries + '/*.s',
-    ]
+uint32_t vPortGetRunTimeStats(TaskStatus_t *pxTaskStatusArray, UBaseType_t *uxArraySize)
+{
+    uint32_t ulTotalTime;
 
-    Export {
-        Depends { name: 'stm32' }
-        Depends { name: 'cmsis' }
+    /* Take a snapshot of the number of tasks in case it changes while this
+    function is executing. */
+    *uxArraySize = uxTaskGetNumberOfTasks();
 
-        stm32.includePaths: [
-            FileInfo.joinPaths(exportingProduct.sourceDirectory, 'inc'),
-            FileInfo.joinPaths(exportingProduct.sourceDirectory, 'port', stm32.targetSeries)
-        ]
-        stm32.libraryPaths: [ exportingProduct.destinationDirectory ]
-        stm32.linkerFlags: ['-Wl,--undefined=uxTopUsedPriority']
+    /* Allocate an array index for each task.  NOTE!  If
+    configSUPPORT_DYNAMIC_ALLOCATION is set to 0 then pvPortMalloc() will
+    equate to NULL. */
+    pxTaskStatusArray = pvPortMalloc((*uxArraySize) * sizeof(TaskStatus_t));
+
+    if( pxTaskStatusArray != NULL ) {
+        *uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, (*uxArraySize), &ulTotalTime);
     }
+
+    return ulTotalTime;
 }
