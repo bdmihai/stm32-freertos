@@ -30,10 +30,6 @@
 #include "stm32rtos.h"
 #include "stm32f4xx.h"
 
-#ifndef __VFP_FP__
-#error This port can only be used when the project options are configured to enable hardware floating point support.
-#endif
-
 /* critical nesting counter maintained by port */
 extern uint32_t uxCriticalNesting;
 

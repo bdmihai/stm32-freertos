@@ -21,40 +21,52 @@
  | THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                 |
  |____________________________________________________________________________|
  |                                                                            |
- |  Author: Mihai Baneu                           Last modified: 02.Jan.2021  |
- |                                                                            |
+ |  Author: Mihai Baneu                           Last modified: 08.Jan.2021  |
+ |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
-import qbs.FileInfo
+#include "port.h"
+#include "portmacro.h"
+#include "task.h"
 
-Product {
-    name: 'freertos'
-    type: 'lib'
+extern unsigned int system_cpu_f();
 
-    Depends { name: 'stm32' }
-    Depends { name: 'cmsis' }
+/**
+ * @brief Setup the systick timer to generate the tick interrupts at the required frequency.
+ *
+ */
+void vPortConfigureSysTick(void)
+{
+    /* stop and clear the SysTick. */
+    SysTick->CTRL = 0UL;
+    SysTick->VAL  = 0UL;
 
-    stm32.includePaths: [ 'inc', 'port', FileInfo.joinPaths('port', stm32.targetSeries) ]
+    /* set the SysTick interrupt to the lowest priority in the kernel */
+    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), configKERNEL_INTERRUPT_PRIORITY >> (8U - __NVIC_PRIO_BITS), 0U));
 
-    files: [
-        'inc/*.h',
-        'src/*.c',
-        'port/' + stm32.targetSeries + '/*.c',
-        'port/' + stm32.targetSeries + '/*.h',
-        'port/' + stm32.targetSeries + '/*.s',
-        'port/*.h'
-    ]
+    /* configure SysTick to interrupt at the requested rate. */
+    SysTick->LOAD = ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
+    SysTick->CTRL = ( SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk );
+}
 
-    Export {
-        Depends { name: 'stm32' }
-        Depends { name: 'cmsis' }
-
-        stm32.includePaths: [
-            FileInfo.joinPaths(exportingProduct.sourceDirectory, 'inc'),
-            FileInfo.joinPaths(exportingProduct.sourceDirectory, 'port'),
-            FileInfo.joinPaths(exportingProduct.sourceDirectory, 'port', stm32.targetSeries)
-        ]
-        stm32.libraryPaths: [ exportingProduct.destinationDirectory ]
-        stm32.linkerFlags: ['-Wl,--undefined=uxTopUsedPriority']
+/**
+ * @brief Handler for the SysTick interupt.
+ *
+ * The SysTick runs at the lowest interrupt priority, so when this interrupt
+ * executes all interrupts must be unmasked.  There is therefore no need to
+ * save and then restore the interrupt mask value as its value is already
+ * known.
+ */
+void __attribute__((section(".time_critical.SysTick_Handler"))) SysTick_Handler(void)
+{
+    portDISABLE_INTERRUPTS();
+    {
+        /* increment the RTOS tick. If necessary trigger a context switch using
+        the PendSV interrupt */
+        if( xTaskIncrementTick() != pdFALSE ) {
+            /* a context switch is required to allow the next task to run */
+            vPortYieldFromISR();
+        }
     }
+    portENABLE_INTERRUPTS();
 }
