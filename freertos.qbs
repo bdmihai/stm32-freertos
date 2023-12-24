@@ -34,14 +34,15 @@ Product {
     Depends { name: 'stm32' }
     Depends { name: 'cmsis' }
 
-    stm32.includePaths: [ 'inc', FileInfo.joinPaths('port', stm32.targetSeries) ]
+    stm32.includePaths: [ 'inc', 'port', FileInfo.joinPaths('port', stm32.targetSeries) ]
 
     files: [
         'inc/*.h',
         'src/*.c',
-        'port/' + stm32.targetSeries + '/*.c',
-        'port/' + stm32.targetSeries + '/*.h',
-        'port/' + stm32.targetSeries + '/*.s',
+        'port/*.c',
+        'port/*.h',
+        'port/*.s',
+        'port/' + stm32.targetSeries + '/*.h'
     ]
 
     Export {
@@ -50,6 +51,7 @@ Product {
 
         stm32.includePaths: [
             FileInfo.joinPaths(exportingProduct.sourceDirectory, 'inc'),
+            FileInfo.joinPaths(exportingProduct.sourceDirectory, 'port'),
             FileInfo.joinPaths(exportingProduct.sourceDirectory, 'port', stm32.targetSeries)
         ]
         stm32.libraryPaths: [ exportingProduct.destinationDirectory ]

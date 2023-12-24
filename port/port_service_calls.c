@@ -27,10 +27,8 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include "stm32rtos.h"
-#include "stm32f1xx.h"
-#include "task.h"
 #include "port.h"
+#include "task.h"
 
 volatile int32_t ITM_RxBuffer = ITM_RXBUFFER_EMPTY; // Initialize as EMPTY
 

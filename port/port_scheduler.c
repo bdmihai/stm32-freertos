@@ -25,14 +25,8 @@
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
-#include "stm32rtos.h"
-#include "stm32f4xx.h"
-#include "task.h"
 #include "port.h"
-
-#ifndef __VFP_FP__
-#error This port can only be used when the project options are configured to enable hardware floating point support.
-#endif
+#include "task.h"
 
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
@@ -62,10 +56,12 @@ BaseType_t xPortStartScheduler(void)
     /* make SVC higher in priority than the syscall */
     NVIC_SetPriority(SVCall_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), ((configMAX_SYSCALL_INTERRUPT_PRIORITY - 1) >> (8U - __NVIC_PRIO_BITS)), 0U));
 
+#ifdef __VFP_FP__
     /* enable the FPU and configure automatic hardware state preservation and restoration
     for floating-point context */
     SCB->CPACR |= (0xFUL << 20);
     FPU->FPCCR |= (FPU_FPCCR_ASPEN_Msk | FPU_FPCCR_LSPEN_Msk);
+#endif
 
     /* Initialise the critical nesting count ready for the first task. */
     uxCriticalNesting = 0;

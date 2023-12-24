@@ -25,9 +25,8 @@
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
-#include "stm32rtos.h"
-#include "portmacro.h"
 #include "port.h"
+#include "portmacro.h"
 
 /* initial xPSR value on the stack - set the Thumb state to 1 */
 #define portINITIAL_XPSR                    0x01000000

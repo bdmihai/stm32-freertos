@@ -25,45 +25,48 @@
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
-#include "stm32rtos.h"
-#include "portmacro.h"
 #include "port.h"
+#include "portmacro.h"
+#include "task.h"
+
+extern unsigned int system_cpu_f();
 
 /**
- * This function will be called by each tick interrupt if configUSE_TICK_HOOK
- * is set to 1 in FreeRTOSConfig.h.  User code can be added here, but the tick
- * hook is called from an interrupt context, so code must not attempt to block,
- * and only the interrupt safe FreeRTOS API functions can be used (those that
- * end in FromISR()).
- */
-__attribute__((weak)) void vApplicationTickHook() { }
-
-/**
- *  vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
- *  to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle
- * task.  It is essential that code added to this hook function never attempts
- * to block in any way (for example, call xQueueReceive() with a block time
- * specified, or call vTaskDelay()).  If the application makes use of the
- * vTaskDelete() API function (as this demo application does) then it is also
- * important that vApplicationIdleHook() is permitted to return to its calling
- * function, because it is the responsibility of the idle task to clean up
- * memory allocated by the kernel to any task that has since been deleted.
+ * @brief Setup the systick timer to generate the tick interrupts at the required frequency.
  *
  */
-__attribute__((weak)) void vApplicationIdleHook(void) { }
+void vPortConfigureSysTick(void)
+{
+    /* stop and clear the SysTick. */
+    SysTick->CTRL = 0UL;
+    SysTick->VAL  = 0UL;
+
+    /* set the SysTick interrupt to the lowest priority in the kernel */
+    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), configKERNEL_INTERRUPT_PRIORITY >> (8U - __NVIC_PRIO_BITS), 0U));
+
+    /* configure SysTick to interrupt at the requested rate. */
+    SysTick->LOAD = ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
+    SysTick->CTRL = ( SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk );
+}
 
 /**
- * The RTOS daemon task is the same as the Timer Service Task. Sometimes it is 
- * referred to as the daemon task because the task is now used for more than 
- * just servicing timers.
- * If configUSE_DAEMON_TASK_STARTUP_HOOK is set to 1 in FreeRTOSConfig.h then the 
- * Daemon Task Startup Hook will be called as soon as the Daemon Task starts 
- * executing for the first time. This is useful if the application includes 
- * initialisation code that would benefit from executing after the scheduler has 
- * been started, which allows the initialisation code to make use of the RTOS 
- * functionality.
- * 
- * If configUSE_DAEMON_TASK_STARTUP_HOOK is set to 1 then the application writer 
- * must provide an implementation of the Daemon Task startup hook function.
+ * @brief Handler for the SysTick interupt.
+ *
+ * The SysTick runs at the lowest interrupt priority, so when this interrupt
+ * executes all interrupts must be unmasked.  There is therefore no need to
+ * save and then restore the interrupt mask value as its value is already
+ * known.
  */
-__attribute__((weak)) void vApplicationDaemonTaskStartupHook(void) {}
+void __attribute__((section(".time_critical.SysTick_Handler"))) SysTick_Handler(void)
+{
+    portDISABLE_INTERRUPTS();
+    {
+        /* increment the RTOS tick. If necessary trigger a context switch using
+        the PendSV interrupt */
+        if( xTaskIncrementTick() != pdFALSE ) {
+            /* a context switch is required to allow the next task to run */
+            vPortYieldFromISR();
+        }
+    }
+    portENABLE_INTERRUPTS();
+}

@@ -25,11 +25,9 @@
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
-#include "stm32rtos.h"
-#include "stm32f1xx.h"
+#include "port.h"
 #include "task.h"
 #include "portmacro.h"
-#include "port.h"
 
 extern void panic(const char *fmt, ...);
 

@@ -25,10 +25,8 @@
  |  Based on original M4 port from http://www.FreeRTOS.org                    |
  |___________________________________________________________________________*/
 
-#include "stm32rtos.h"
-#include "stm32f1xx.h"
-#include "portmacro.h"
 #include "port.h"
+#include "portmacro.h"
 #include "task.h"
 
 

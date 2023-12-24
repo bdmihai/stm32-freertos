@@ -27,6 +27,9 @@
 
 #pragma once
 
+#include "stm32rtos.h"
+#include "stm32f1xx.h"
+
 /* critical nesting counter maintained by port */
 extern uint32_t uxCriticalNesting;
 

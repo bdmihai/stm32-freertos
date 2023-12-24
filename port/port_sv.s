@@ -172,6 +172,13 @@ PendSV_Handler:
     ldr	r2, PendSV_Handler_Locals
     ldr	r1, [r2]
 
+.ifdef __VFP_FP__
+    /* backup the fpu registers to the task stack */
+    tst r14, #0x10
+    it eq
+    vstmdbeq r0!, {s16-s31}
+.endif
+
     /* backup the core registers to the task stack */
     stmdb r0!, {r4-r11, r14}
 
@@ -205,6 +212,13 @@ PendSV_Handler:
 
     /* restore the core registers from the task stack */
     ldmia r0!, {r4-r11, r14}
+
+.ifdef __VFP_FP__
+    /* restore the fpu registers from the task stack */
+    tst r14, #0x10
+    it eq
+    vldmiaeq r0!, {s16-s31}
+.endif
 
     /* set the new process stack pointer */
     msr psp, r0
