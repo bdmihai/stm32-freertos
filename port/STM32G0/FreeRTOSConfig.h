@@ -167,7 +167,7 @@
  * FreeRTOS/source/timers.c source file must be included in the build if
  * configUSE_TIMERS is set to 1.  Default to 0 if left undefined.  See
  * https://www.freertos.org/RTOS-software-timer.html. */
-#define configUSE_TIMERS                           1
+#define configUSE_TIMERS                           0
 
 /* configTIMER_TASK_PRIORITY sets the priority used by the timer task.  Only
  * used if configUSE_TIMERS is set to 1.  The timer task is a standard FreeRTOS
@@ -224,9 +224,9 @@
 /* Interrupt nesting behaviour configuration. *********************************/
 /******************************************************************************/
 
-#define configSVCall_INTERRUPT_PRIORITY          0
-#define configPendSV_INTERRUPT_PRIORITY          3
-#define configSysTick_INTERRUPT_PRIORITY         3
+#define configSVCall_INTERRUPT_PRIORITY             0
+#define configPendSV_INTERRUPT_PRIORITY             3
+#define configSysTick_INTERRUPT_PRIORITY            3
 
 /******************************************************************************/
 /* Hook and callback function related definitions. ****************************/
@@ -332,7 +332,7 @@
 #define INCLUDE_xTaskGetIdleTaskHandle               1
 #define INCLUDE_eTaskGetState                        1
 #define INCLUDE_xEventGroupSetBitFromISR             1
-#define INCLUDE_xTimerPendFunctionCall               1
+#define INCLUDE_xTimerPendFunctionCall               0
 #define INCLUDE_xTaskAbortDelay                      0
 #define INCLUDE_xTaskGetHandle                       1
 #define INCLUDE_xTaskResumeFromISR                   1

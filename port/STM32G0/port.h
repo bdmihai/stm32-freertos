@@ -39,11 +39,6 @@ extern void vPortConfigureSysTick(void);
 /* yield the next highest prio task from a priviledged mode */
 extern void vPortYieldFromISR(void);
 
-/* isr handlers */
-extern void vPortSVCHandler();
-extern void vPortPendSVHandler();
-extern void vPortSysTickHandler();
-
 /* start the first task */
 extern void vPortStartFirstTask(void);
 

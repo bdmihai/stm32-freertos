@@ -31,6 +31,9 @@
 /* initial xPSR value on the stack - set the Thumb state to 1 */
 #define portINITIAL_XPSR                    0x01000000
 
+/* return from exception in "Thread Mode" and use PSP as stack pointer */
+#define portINITIAL_EXC_RETURN              0XFFFFFFFD
+
 /* for strict compliance with the Cortex-M spec the task start address should
 have bit-0 clear, as it is loaded into the PC on exit from an ISR. */
 #define portSTART_ADDRESS_MASK              0XFFFFFFFE
@@ -64,12 +67,11 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     pxTopOfStack--;
     *pxTopOfStack = (StackType_t) portTASK_RETURN_ADDRESS;                			/* LR */
 
-    pxTopOfStack -= 4;                                                      		/* R12, R3, R2 and R1. */
+    pxTopOfStack -= 5;                                                      		/* R12, R3, R2, R1 and R0 */
+    *pxTopOfStack = (StackType_t) pvParameters; 
 
-    pxTopOfStack--;
-    *pxTopOfStack = (StackType_t) pvParameters;                           			/* R0 */
-
-    pxTopOfStack -= 8;                                                      		/* R11, R10, R9, R8, R7, R6, R5 and R4. */
+    pxTopOfStack -= 9;                                                      		/* EXC_RETURN, R11, R10, R9, R8, R7, R6, R5 and R4. */
+    *pxTopOfStack = portINITIAL_EXC_RETURN;                                         /* assume that we always return from handler mode to thread mode */
 
     return pxTopOfStack;
 }

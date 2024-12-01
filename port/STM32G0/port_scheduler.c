@@ -40,10 +40,6 @@ BaseType_t xPortStartScheduler(void)
     /* make sure all interupts are disabled */
     portDISABLE_INTERRUPTS();
 
-    /* add PendSV_IRQn, SVCall_IRQn and SysTick_IRQn handlers */
-    NVIC_SetVector(SVCall_IRQn, (uint32_t)vPortSVCHandler);
-    NVIC_SetVector(PendSV_IRQn, (uint32_t)vPortPendSVHandler);
-
     /* set PendSV_IRQn, SVCall_IRQn and SysTick_IRQn priority */
     NVIC_SetPriority(SVCall_IRQn, configSVCall_INTERRUPT_PRIORITY);
     NVIC_SetPriority(PendSV_IRQn, configPendSV_INTERRUPT_PRIORITY);

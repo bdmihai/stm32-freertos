@@ -27,8 +27,6 @@
  
 .syntax unified
 
-#define INITIAL_EXC_RETURN  0XFFFFFFFD
-
 /*-----------------------------------------------------------*/
 /*                      vPortRaisePrivilege                  */
 /*-----------------------------------------------------------*/
@@ -131,11 +129,18 @@ vPortStartFirstTask:
 /* This function sets the context of the first task and returns into this task. */
 vPortSetFirstTaskContext:
     /* get the location of the pxCurrentTCB */
-    ldr	r3, =pxCurrentTCB
-    ldr r1, [r3]
+    ldr	r2, =pxCurrentTCB
+    ldr r1, [r2]
 
     /* first item in pxCurrentTCB is the task top of stack */
     ldr r0, [r1]
+
+    /* r2 <= EXC_RETURN */
+    ldm  r0!, {r2} 
+
+    /* switch to use psp in the thread mode. */
+    movs r1, #2
+    msr control, r1
 
     /* discard everything up to r0 */
     adds r0, #32
@@ -144,15 +149,8 @@ vPortSetFirstTaskContext:
     msr psp, r0
     isb
 
-    /* reset privileges - nPRIV set to 1 for unpriveledged execution in Thread Mode */
-    mrs r0, control
-    movs r1, #1
-    orrs r0, r1
-    msr control, r0
-
     /* return from handler mode to thread mode: basically pops r0-r4, r12, r14(lr), r15(pc), psr */
-    ldr r0, =INITIAL_EXC_RETURN
-    bx r0
+    bx r2
 
 .align 4
 vPortSetFirstTaskContext_Locals: 
@@ -161,12 +159,12 @@ vPortSetFirstTaskContext_Locals:
 .size vPortSetFirstTaskContext, .-vPortSetFirstTaskContext
 
 /*-----------------------------------------------------------*/
-/*                       vPortSVCHandler                     */
+/*                         SVC_Handler                       */
 /*-----------------------------------------------------------*/
-.section .time_critical.vPortSVCHandler, "ax", %progbits
-.global vPortSVCHandler
-.type vPortSVCHandler, %function
-vPortSVCHandler:
+.section .time_critical.SVC_Handler, "ax", %progbits
+.global SVC_Handler
+.type SVC_Handler, %function
+SVC_Handler:
     /* check what stack pointer to use */
     mov  r1, lr
     movs r2, #4
@@ -178,30 +176,35 @@ vPortSVCHandler:
 2:
     mrs r0, psp
 3:
-    b vPortServiceHandler
+    ldr r3, =vPortServiceHandler
+    bx r3
 
-.size vPortSVCHandler, .-vPortSVCHandler
+.size SVC_Handler, .-SVC_Handler
 
 /*-----------------------------------------------------------*/
-/*                     vPortPendSVHandler                    */
+/*                       PendSV_Handler                      */
 /*-----------------------------------------------------------*/
-.section .time_critical.vPortPendSVHandler, "ax", %progbits
-.global vPortPendSVHandler
-.type vPortPendSVHandler, %function
+.section .time_critical.PendSV_Handler, "ax", %progbits
+.global PendSV_Handler
+.type PendSV_Handler, %function
 
-vPortPendSVHandler:
+PendSV_Handler:
     /* get the process stack pointer */
     mrs r0, psp
 
     /* get the location of the pxCurrentTCB */
-    ldr	r2, PendSV_Handler_Locals
+    ldr	r2, =pxCurrentTCB
     ldr	r1, [r2]
 
     /* go down in the stack in order to use the increment after function - M0+ is missing STMDB */
-    subs r0, r0, #32 
+    subs r0, r0, #36
+
+    /* Save the new top of stack in TCB. */
+    str r0, [r1]
 
     /* backup the lower registers to the task stack */
-    stmia r0!, {r4-r7}
+    mov r3, lr
+    stmia r0!, {r3-r7}
 
     /* backup the upper registers to the task stack */
     mov r4, r8
@@ -211,18 +214,17 @@ vPortPendSVHandler:
     stmia r0!, {r4-r7}
 
     /* change the current context (address pointed by pxCurrentTCB) */
-    push {r3, r14}
     cpsid i
     bl vTaskSwitchContext
     cpsie i
-    pop {r2, r3} /* lr goes in r3. r2 now holds tcb pointer. */
 
     /* first item in pxCurrentTCB is the task top of stack */
+    ldr r2, =pxCurrentTCB
     ldr r1, [r2]                  
     ldr r0, [r1]
 
     /* restore the upper registers from the task stack */
-    adds r0, r0, #16
+    adds r0, r0, #20
     ldmia r0!, {r4-r7}
     mov r8, r4
     mov r9, r5
@@ -233,8 +235,8 @@ vPortPendSVHandler:
     msr psp, r0
 
     /* restore the lower registers from the task stack */
-    subs r0, r0, #32
-    ldmia r0!, {r4-r7}
+    subs r0, r0, #36
+    ldmia r0!, {r3-r7}
 
     /* return from handler mode */
     bx r3
@@ -243,6 +245,6 @@ vPortPendSVHandler:
 PendSV_Handler_Locals: 
     .word pxCurrentTCB 
 
-.size vPortPendSVHandler, .-vPortPendSVHandler
+.size PendSV_Handler, .-PendSV_Handler
 
 .end
